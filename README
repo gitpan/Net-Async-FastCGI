@@ -2,6 +2,8 @@ NAME
     "Net::Async::FastCGI" - use FastCGI with IO::Async
 
 SYNOPSIS
+    As an adapter:
+
      use Net::Async::FastCGI;
      use IO::Async::Loop;
 
@@ -21,6 +23,29 @@ SYNOPSIS
 
      $loop->loop_forever;
 
+    As a subclass:
+
+     package MyFastCGIResponder;
+     use base qw( Net::Async::FastCGI );
+
+     sub on_request
+     {
+        my $self = shift;
+        my ( $req ) = @_;
+
+        # Handle the request here
+     }
+
+     ...
+
+     use IO::Async::Loop;
+
+     my $loop = IO::Async::Loop->new();
+
+     $loop->add( MyFastCGIResponder->new( service => 1234 ) );
+
+     $loop->loop_forever;
+
 DESCRIPTION
     This module allows a program to respond asynchronously to FastCGI
     requests, as part of a program based on IO::Async. An object in this
@@ -31,18 +56,19 @@ DESCRIPTION
     yet finished, are represented by instances of
     Net::Async::FastCGI::Request.
 
-CONSTRUCTOR
+EVENTS
+    The following events are invoked, either using subclass methods or CODE
+    references in parameters:
+
+  on_request $req
+    Invoked when a new FastCGI request is received. It will be passed a new
+    Net::Async::FastCGI::Request object.
+
 PARAMETERS
     The following named parameters may be passed to "new" or "configure":
 
     on_request => CODE
-            Reference to a handler to call when a new FastCGI request is
-            received. It will be invoked as
-
-             $on_request->( $fcgi, $request )
-
-            where $request will be a new Net::Async::FastCGI::Request
-            object.
+            CODE references for "on_request" event handler.
 
     default_encoding => STRING
             Sets the default encoding used by all new requests. If not

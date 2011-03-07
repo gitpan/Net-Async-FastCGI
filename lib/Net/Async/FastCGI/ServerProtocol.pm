@@ -153,5 +153,4 @@ sub _get_value
    return undef;
 }
 
-# Keep perl happy; keep Britain tidy
-1;
+0x55AA;

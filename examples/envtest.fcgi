@@ -2,14 +2,21 @@
 
 use strict;
 
-use Net::Async::FastCGI;
 use IO::Async::Loop;
 
 my $loop = IO::Async::Loop->new();
 
+$loop->add( Example::EnvTestResponder->new( handle => \*STDIN ) );
+
+$loop->loop_forever();
+
+package Example::EnvTestResponder;
+use base qw( Net::Async::FastCGI );
+
 sub on_request
 {
-   my ( $fcgi, $req ) = @_;
+   my $self = shift;
+   my ( $req ) = @_;
 
    my $env = $req->params();
 
@@ -55,12 +62,3 @@ sub on_request
 
    $req->finish();
 }
-
-my $fcgi = Net::Async::FastCGI->new(
-   handle => \*STDIN,
-   on_request => \&on_request,
-);
-
-$loop->add( $fcgi );
-
-$loop->loop_forever();

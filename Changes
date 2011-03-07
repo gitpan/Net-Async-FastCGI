@@ -1,5 +1,9 @@
 Revision history for Net-Async-FastCGI
 
+0.23    CHANGES:
+         * Implement on_request as a normal IO::Async::Notifier-style event,
+           so it works as a subclass too
+
 0.22    CHANGES:
          * Split out from FCGI-Async; most code renamed
          * Net::Async::FastCGI::Protocol directly built on top of

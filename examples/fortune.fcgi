@@ -2,20 +2,27 @@
 
 use strict;
 
-use Net::Async::FastCGI;
-
-use IO::Async::Stream;
 use IO::Async::Loop;
 
 my $FORTUNE = "/usr/games/fortune";
 
 my $loop = IO::Async::Loop->new();
 
+$loop->add( Example::FortuneResponder->new( handle => \*STDIN ) );
+
+$loop->loop_forever();
+
+package Example::FortuneResponder;
+use base qw( Net::Async::FastCGI );
+
+use IO::Async::Stream;
+
 sub on_request
 {
-   my ( $fcgi, $req ) = @_;
+   my $self = shift;
+   my ( $req ) = @_;
    
-   my $kid = $fcgi->get_loop->open_child(
+   my $kid = $self->get_loop->open_child(
       command => [ $FORTUNE ],
       stdout => {
          on_read => sub {
@@ -79,12 +86,3 @@ sub on_request
       " <body><h1>$FORTUNE says:</h1>"
    );
 }
-
-my $fcgi = Net::Async::FastCGI->new(
-   handle => \*STDIN,
-   on_request => \&on_request,
-);
-
-$loop->add( $fcgi );
-
-$loop->loop_forever();

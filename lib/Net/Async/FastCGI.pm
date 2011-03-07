@@ -11,12 +11,13 @@ use warnings;
 use Carp;
 
 use base qw( IO::Async::Listener );
+IO::Async::Listener->VERSION( '0.35' );
 
 use Net::Async::FastCGI::ServerProtocol;
 
 use IO::Socket::INET;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 # The FCGI_GET_VALUES request might ask for our maximally supported number of
 # concurrent connections or requests. We don't really have an inbuilt maximum,
@@ -29,6 +30,8 @@ our $MAX_REQS  = 1024;
 C<Net::Async::FastCGI> - use FastCGI with L<IO::Async>
 
 =head1 SYNOPSIS
+
+As an adapter:
 
  use Net::Async::FastCGI;
  use IO::Async::Loop;
@@ -49,6 +52,29 @@ C<Net::Async::FastCGI> - use FastCGI with L<IO::Async>
 
  $loop->loop_forever;
 
+As a subclass:
+
+ package MyFastCGIResponder;
+ use base qw( Net::Async::FastCGI );
+
+ sub on_request
+ {
+    my $self = shift;
+    my ( $req ) = @_;
+
+    # Handle the request here
+ }
+
+ ...
+
+ use IO::Async::Loop;
+
+ my $loop = IO::Async::Loop->new();
+
+ $loop->add( MyFastCGIResponder->new( service => 1234 ) );
+
+ $loop->loop_forever;
+
 =head1 DESCRIPTION
 
 This module allows a program to respond asynchronously to FastCGI requests,
@@ -61,7 +87,15 @@ L<Net::Async::FastCGI::Request>.
 
 =cut
 
-=head1 CONSTRUCTOR
+=head1 EVENTS
+
+The following events are invoked, either using subclass methods or CODE
+references in parameters:
+
+=head2 on_request $req
+
+Invoked when a new FastCGI request is received. It will be passed a new
+L<Net::Async::FastCGI::Request> object.
 
 =cut
 
@@ -73,12 +107,7 @@ The following named parameters may be passed to C<new> or C<configure>:
 
 =item on_request => CODE
 
-Reference to a handler to call when a new FastCGI request is received.
-It will be invoked as
-
- $on_request->( $fcgi, $request )
-
-where C<$request> will be a new L<Net::Async::FastCGI::Request> object.
+CODE references for C<on_request> event handler.
 
 =item default_encoding => STRING
 
@@ -92,20 +121,10 @@ C<UTF-8> will apply.
 sub _init
 {
    my $self = shift;
+   my ( $params ) = @_;
+   $self->SUPER::_init( $params );
 
-   $self->{default_encoding} = "UTF-8";
-
-   $self->configure(
-      # Because at time of writing IO::Async::Listener doesn't have an on_stream method
-      on_stream => sub {
-         my ( $self, $stream ) = @_;
-
-         $self->add_child( Net::Async::FastCGI::ServerProtocol->new(
-            transport => $stream,
-            fcgi      => $self,
-         ) );
-      }
-   );
+   $params->{default_encoding} = "UTF-8";
 }
 
 sub configure
@@ -122,6 +141,17 @@ sub configure
    }
 
    $self->SUPER::configure( %params );
+}
+
+sub on_stream
+{
+   my $self = shift;
+   my ( $stream ) = @_;
+
+   $self->add_child( Net::Async::FastCGI::ServerProtocol->new(
+      transport => $stream,
+      fcgi      => $self,
+   ) );
 }
 
 =head1 METHODS
@@ -165,7 +195,6 @@ callbacks for error handling - see L<IO::Async::Listener> for more detail.
 
 =cut
 
-# TODO: Most of this needs to be moved into an abstract Net::Async::Server role
 sub listen
 {
    my $self = shift;
@@ -185,7 +214,7 @@ sub _request_ready
    my $self = shift;
    my ( $req ) = @_;
 
-   $self->{on_request}->( $self, $req );
+   $self->invoke_event( on_request => $req );
 }
 
 sub _default_encoding
@@ -193,11 +222,6 @@ sub _default_encoding
    my $self = shift;
    return $self->{default_encoding};
 }
-
-# Keep perl happy; keep Britain tidy
-1;
-
-__END__
 
 =head1 Limits in FCGI_GET_VALUES
 
@@ -243,3 +267,7 @@ L<http://www.fastcgi.com/devkit/doc/fcgi-spec.html> - FastCGI Specification
 =head1 AUTHOR
 
 Paul Evans <leonerd@leonerd.org.uk>
+
+=cut
+
+0x55AA;

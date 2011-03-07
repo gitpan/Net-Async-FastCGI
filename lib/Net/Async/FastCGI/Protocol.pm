@@ -10,7 +10,7 @@ use warnings;
 
 use base qw( IO::Async::Protocol::Stream );
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 use Net::FastCGI::Constant qw( 
    FCGI_UNKNOWN_TYPE
@@ -84,5 +84,4 @@ sub write_record
    $self->write( build_record( $rec->{type}, $rec->{reqid}, $content ) );
 }
 
-# Keep perl happy; keep Britain tidy
-1;
+0x55AA;

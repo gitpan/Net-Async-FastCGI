@@ -23,7 +23,7 @@ use constant MAXRECORDDATA => 65535;
 use Encode qw( find_encoding );
 use POSIX qw( EAGAIN );
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 my $CRLF = "\x0d\x0a";
 
@@ -562,8 +562,8 @@ sub is_aborted
 =head1 HTTP::Request/Response Interface
 
 The following pair of methods form an interface that allows the request to be
-used as a source of C<HTTP::Request> objects, responding to them by sending
-C<HTTP::Response> objects. This may be useful to fit it in to existing code
+used as a source of L<HTTP::Request> objects, responding to them by sending
+L<HTTP::Response> objects. This may be useful to fit it in to existing code
 that already uses these.
 
 =cut
@@ -674,11 +674,6 @@ sub READ     { shift->{READ}->( @_ ) }
 sub READLINE { shift->{READLINE}->( @_ ) }
 sub WRITE    { shift->{WRITE}->( @_ ) }
 
-# Keep perl happy; keep Britain tidy
-1;
-
-__END__
-
 =head1 EXAMPLES
 
 =head2 Streaming A File
@@ -717,3 +712,7 @@ efficiently. See your webserver's documentation for more detail.
 =head1 AUTHOR
 
 Paul Evans <leonerd@leonerd.org.uk>
+
+=cut
+
+0x55AA;
