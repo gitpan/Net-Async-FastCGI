@@ -23,7 +23,7 @@ use constant MAXRECORDDATA => 65535;
 use Encode qw( find_encoding );
 use POSIX qw( EAGAIN );
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 my $CRLF = "\x0d\x0a";
 

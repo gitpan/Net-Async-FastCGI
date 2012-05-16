@@ -7,6 +7,7 @@ my $build = Module::Build->new(
    module_name => 'Net::Async::FastCGI',
    requires => {
       'Encode' => 0,
+      'Exporter' => '5.57',
       'HTTP::Request' => 0,
       'HTTP::Response' => 0,
       'IO::Async::Listener' => '0.35',
@@ -22,6 +23,7 @@ my $build = Module::Build->new(
       'Test::More' => 0,
       'Test::Refcount' => 0,
    },
+   auto_configure_requires => 0, # Don't add M::B to configure_requires
    license => 'perl',
    create_makefile_pl => 'traditional',
    create_license => 1,

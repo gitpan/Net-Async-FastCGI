@@ -1,5 +1,11 @@
 Revision history for Net-Async-FastCGI
 
+0.24    CHANGES:
+         * Correct SYNOPSIS examples to use ->listen rather than 'service'
+           param
+         * Import Exporter's 'import' function rather than 'use base'ing on
+           Exporter
+
 0.23    CHANGES:
          * Implement on_request as a normal IO::Async::Notifier-style event,
            so it works as a subclass too

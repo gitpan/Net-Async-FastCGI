@@ -17,7 +17,7 @@ use Net::Async::FastCGI::ServerProtocol;
 
 use IO::Socket::INET;
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 # The FCGI_GET_VALUES request might ask for our maximally supported number of
 # concurrent connections or requests. We don't really have an inbuilt maximum,
@@ -38,17 +38,21 @@ As an adapter:
 
  my $loop = IO::Async::Loop->new();
 
- my $fcgi = Net::Async::FastCGI->new(
-    service => 1234,
-
+ my $fastcgi = Net::Async::FastCGI->new(
     on_request => sub {
-       my ( $fcgi, $req ) = @_;
+       my ( $fastcgi, $req ) = @_;
 
        # Handle the request here
     }
  );
 
- $loop->add( $fcgi );
+ $loop->add( $fastcgi );
+
+ $fastcgi->listen(
+    service => 1234,
+    on_resolve_error => sub { die "Cannot resolve - $_[-1]\n" },
+    on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
+ );
 
  $loop->loop_forever;
 
@@ -71,7 +75,14 @@ As a subclass:
 
  my $loop = IO::Async::Loop->new();
 
- $loop->add( MyFastCGIResponder->new( service => 1234 ) );
+ my $fastcgi;
+ $loop->add( $fastcgi = MyFastCGIResponder->new( service => 1234 ) );
+
+ $fastcgi->listen(
+    service => 1234,
+    on_resolve_error => sub { die "Cannot resolve - $_[-1]\n" },
+    on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
+ );
 
  $loop->loop_forever;
 

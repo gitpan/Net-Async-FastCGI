@@ -10,7 +10,7 @@ use warnings;
 
 use base qw( IO::Async::Protocol::Stream );
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 use Net::FastCGI::Constant qw( 
    FCGI_UNKNOWN_TYPE

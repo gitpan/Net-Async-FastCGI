@@ -32,3 +32,4 @@ t/20get_values.t
 t/30request-HTTP.t
 t/99pod.t
 t/lib/TestFCGI.pm
+META.json
