@@ -1,5 +1,10 @@
 Revision history for Net-Async-FastCGI
 
+0.25    CHANGES:
+         * Import PSGI support from FCGI::Async directly here
+         * Add some convenience methods to get often-used fields from request
+           without needing to use ->param
+
 0.24    CHANGES:
          * Correct SYNOPSIS examples to use ->listen rather than 'service'
            param

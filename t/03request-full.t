@@ -3,7 +3,7 @@
 use strict;
 use lib 't/lib';
 
-use Test::More tests => 6;
+use Test::More tests => 12;
 use Test::HexString;
 
 use IO::Async::Loop;
@@ -35,7 +35,13 @@ $C->syswrite(
    # Begin
    fcgi_trans( type => 1, id => 1, data => "\0\1\0\0\0\0\0\0" ) .
    # Parameters
-   fcgi_trans( type => 4, id => 1, data => "\3\3FOOfoo\5\5SPLOTsplot" ) .
+   fcgi_trans( type => 4, id => 1, data =>
+      fcgi_keyval( REQUEST_METHOD  => "GET" ) .
+      fcgi_keyval( SCRIPT_NAME     => "/cgi-bin/foo.fcgi" ) .
+      fcgi_keyval( PATH_INFO       => "/another/path" ) .
+      fcgi_keyval( QUERY_STRING    => "foo=bar" ) .
+      fcgi_keyval( SERVER_PROTOCOL => "HTTP/1.1" )
+   ) .
    # End of parameters
    fcgi_trans( type => 4, id => 1, data => "" ) .
    # STDIN
@@ -49,8 +55,21 @@ $C->syswrite(
 wait_for { defined $request };
 
 is_deeply( $request->params,
-           { FOO => 'foo', SPLOT => 'splot' },
+           {
+              REQUEST_METHOD  => "GET",
+              SCRIPT_NAME     => "/cgi-bin/foo.fcgi",
+              PATH_INFO       => "/another/path",
+              QUERY_STRING    => "foo=bar",
+              SERVER_PROTOCOL => "HTTP/1.1",
+           },
            '$request has correct params' );
+is( $request->method,       "GET",                            '$request->method' );
+is( $request->script_name,  "/cgi-bin/foo.fcgi",              '$request->script_name' );
+is( $request->path_info,    "/another/path",                  '$request->path_info' );
+is( $request->path,         "/cgi-bin/foo.fcgi/another/path", '$request->path' );
+is( $request->query_string, "foo=bar",                        '$request->query_string' );
+is( $request->protocol,     "HTTP/1.1",                       '$request->protocol' );
+
 is( $request->read_stdin_line,
     "Hello, FastCGI script$CRLF",
     '$request has correct STDIN line 1' );

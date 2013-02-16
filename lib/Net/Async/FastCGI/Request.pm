@@ -1,7 +1,7 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2005-2011 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2005-2013 -- leonerd@leonerd.org.uk
 
 package Net::Async::FastCGI::Request;
 
@@ -23,7 +23,7 @@ use constant MAXRECORDDATA => 65535;
 use Encode qw( find_encoding );
 use POSIX qw( EAGAIN );
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 my $CRLF = "\x0d\x0a";
 
@@ -53,7 +53,7 @@ C<Net::Async::FastCGI::Request> - a single active FastCGI request
 
  $loop->add( $fcgi );
 
- $loop->loop_forever;
+ $loop->run;
 
 =head1 DESCRIPTION
 
@@ -65,7 +65,7 @@ STDOUT stream, messages to the STDERR stream, and eventually finish it.
 
 This module would not be used directly by a program using
 C<Net::Async::FastCGI>, but rather, objects in this class are passed into the
-C<on_request> callback of the containing C<Net::Async::FastCGI> object.
+C<on_request> event of the containing C<Net::Async::FastCGI> object.
 
 =cut
 
@@ -220,6 +220,86 @@ sub param
    my ( $key ) = @_;
 
    return $self->{params}{$key};
+}
+
+=head2 $method = $req->method
+
+Returns the value of the C<REQUEST_METHOD> parameter, or C<GET> if there is no
+value set for it.
+
+=cut
+
+sub method
+{
+   my $self = shift;
+   return $self->param( "REQUEST_METHOD" ) || "GET";
+}
+
+=head2 $script_name = $req->script_name
+
+Returns the value of the C<SCRIPT_NAME> parameter.
+
+=cut
+
+sub script_name
+{
+   my $self = shift;
+   return $self->param( "SCRIPT_NAME" );
+}
+
+=head2 $path_info = $req->path_info
+
+Returns the value of the C<PATH_INFO> parameter.
+
+=cut
+
+sub path_info
+{
+   my $self = shift;
+   return $self->param( "PATH_INFO" );
+}
+
+=head2 $path = $req->path
+
+Returns the full request path by reconstructing it from C<script_name> and
+C<path_info>.
+
+=cut
+
+sub path
+{
+   my $self = shift;
+
+   my $path = join "", grep defined && length,
+      $self->script_name,
+      $self->path_info;
+   $path = "/" if !length $path;
+
+   return $path;
+}
+
+=head2 $query_string = $req->query_string
+
+Returns the value of the C<QUERY_STRING> parameter.
+
+=cut
+
+sub query_string
+{
+   my $self = shift;
+   return $self->param( "QUERY_STRING" ) || "";
+}
+
+=head2 $protocol = $req->protocol
+
+Returns the value of the C<SERVER_PROTOCOL> parameter.
+
+=cut
+
+sub protocol
+{
+   my $self = shift;
+   return $self->param( "SERVER_PROTOCOL" );
 }
 
 =head2 $req->set_encoding( $encoding )
@@ -585,18 +665,14 @@ sub as_http_request
 
    my $params = $self->params;
 
-   my $method = $params->{REQUEST_METHOD} || "GET";
-
-   my $authority = 
+   my $authority =
       ( $params->{HTTP_HOST} || $params->{SERVER_NAME} || "" ) . ":" .
       ( $params->{SERVER_PORT} || "80" );
 
-   my $path = join "", grep defined && length,
-      $params->{SCRIPT_NAME},
-      $params->{PATH_INFO};
-   $path = "/" if !length $path;
+   my $path = $self->path;
+   my $query_string = $self->query_string;
 
-   $path .= "?$params->{QUERY_STRING}" if length( $params->{QUERY_STRING} || "" );
+   $path .= "?$query_string" if length $query_string;
 
    my $uri = URI->new( "http://$authority$path" )->canonical;
 
@@ -617,7 +693,11 @@ sub as_http_request
 
    my $content = $self->{stdin};
 
-   return HTTP::Request->new( $method, $uri, \@headers, $content );
+   my $req = HTTP::Request->new( $self->method, $uri, \@headers, $content );
+
+   $req->protocol( $self->protocol );
+
+   return $req;
 }
 
 =head2 $req->send_http_response( $resp )
@@ -703,7 +783,7 @@ C<stream_stdout_then_finish>:
 
  $loop->add( $fcgi );
 
- $loop->loop_forever;
+ $loop->run;
 
 It may be more efficient again to instead use the C<X-Sendfile> feature of
 certain webservers, which allows the webserver itself to serve the file

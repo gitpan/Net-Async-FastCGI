@@ -3,7 +3,7 @@
 use strict;
 use lib 't/lib';
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Test::HexString;
 
 use IO::Async::Loop;
@@ -34,12 +34,16 @@ $C->syswrite(
    fcgi_trans( type => 1, id => 1, data => "\0\1\0\0\0\0\0\0" ) .
    # Parameters
    fcgi_trans( type => 4, id => 1, data => 
-      fcgi_keyval( REQUEST_METHOD => "GET" ) . 
-      fcgi_keyval( SCRIPT_NAME    => "/fcgi-bin/test.fcgi" ) .
-      fcgi_keyval( PATH_INFO      => "/path/to/file" ) . 
-      fcgi_keyval( HTTP_HOST      => "mysite" ) . 
-      fcgi_keyval( CONTENT_TYPE   => "text/plain" ) . 
-      fcgi_keyval( CONTENT_LENGTH => "11" ) . 
+      fcgi_keyval( REQUEST_METHOD  => "GET" ) .
+      fcgi_keyval( SCRIPT_NAME     => "/fcgi-bin/test.fcgi" ) .
+      fcgi_keyval( PATH_INFO       => "/path/to/file" ) .
+      fcgi_keyval( QUERY_STRING    => "" ) .
+      fcgi_keyval( HTTP_HOST       => "mysite" ) .
+      fcgi_keyval( CONTENT_TYPE    => "text/plain" ) .
+      fcgi_keyval( CONTENT_LENGTH  => "11" ) .
+      fcgi_keyval( SERVER_HOST     => "localhost" ) .
+      fcgi_keyval( SERVER_PORT     => "80" ) .
+      fcgi_keyval( SERVER_PROTOCOL => "HTTP/1.1" ) .
       fcgi_keyval( "" => "" )
    ) .
    # End of parameters
@@ -57,6 +61,7 @@ my $httpreq = $request->as_http_request;
 isa_ok( $httpreq, 'HTTP::Request', '$httpreq isa HTTP::Request' );
 
 is( $httpreq->method,           "GET",         '$httpreq->method' );
+is( $httpreq->protocol,         "HTTP/1.1",    '$httpreq->protocol' );
 is( $httpreq->header( "Host" ), "mysite",      '$httpreq->header' );
 is( $httpreq->content_type,     "text/plain",  '$httpreq->content_type' );
 is( $httpreq->content,          "Hello there", '$httpreq->content' );

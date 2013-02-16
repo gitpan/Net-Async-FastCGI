@@ -25,7 +25,7 @@ SYNOPSIS
         on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
      );
 
-     $loop->loop_forever;
+     $loop->run;
 
     As a subclass:
 
@@ -55,7 +55,7 @@ SYNOPSIS
         on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
      );
 
-     $loop->loop_forever;
+     $loop->run;
 
 DESCRIPTION
     This module allows a program to respond asynchronously to FastCGI

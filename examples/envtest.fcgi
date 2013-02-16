@@ -8,7 +8,7 @@ my $loop = IO::Async::Loop->new();
 
 $loop->add( Example::EnvTestResponder->new( handle => \*STDIN ) );
 
-$loop->loop_forever();
+$loop->run;
 
 package Example::EnvTestResponder;
 use base qw( Net::Async::FastCGI );

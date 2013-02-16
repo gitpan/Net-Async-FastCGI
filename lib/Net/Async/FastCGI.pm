@@ -1,7 +1,7 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2005-2011 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2005-2013 -- leonerd@leonerd.org.uk
 
 package Net::Async::FastCGI;
 
@@ -15,9 +15,7 @@ IO::Async::Listener->VERSION( '0.35' );
 
 use Net::Async::FastCGI::ServerProtocol;
 
-use IO::Socket::INET;
-
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 # The FCGI_GET_VALUES request might ask for our maximally supported number of
 # concurrent connections or requests. We don't really have an inbuilt maximum,
@@ -54,7 +52,7 @@ As an adapter:
     on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
  );
 
- $loop->loop_forever;
+ $loop->run;
 
 As a subclass:
 
@@ -84,7 +82,7 @@ As a subclass:
     on_listen_error  => sub { die "Cannot listen - $_[-1]\n" },
  );
 
- $loop->loop_forever;
+ $loop->run;
 
 =head1 DESCRIPTION
 
@@ -211,13 +209,7 @@ sub listen
    my $self = shift;
    my %args = @_;
 
-   if( $args{handle} ) {
-      carp "Using 'handle' as a ->listen argument is deprecated; use the ->configure method instead";
-      $self->configure( handle => $args{handle} );
-   }
-   else {
-      $self->SUPER::listen( %args, socktype => SOCK_STREAM );
-   }
+   $self->SUPER::listen( %args, socktype => 'stream' );
 }
 
 sub _request_ready

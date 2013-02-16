@@ -24,7 +24,7 @@ sub on_request
       $stdin .= $line;
    }
    
-   $fcgi->get_loop->open_child(
+   $fcgi->loop->open_child(
       command => [ $handler, @handler_args ],
       setup => [
          env => \%req_env,
@@ -67,4 +67,4 @@ my $fcgi = Net::Async::FastCGI->new(
 
 $loop->add( $fcgi );
 
-$loop->loop_forever();
+$loop->run;

@@ -47,4 +47,4 @@ my $fcgi = Net::Async::FastCGI->new(
 
 $loop->add( $fcgi );
 
-$loop->loop_forever();
+$loop->run;

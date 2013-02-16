@@ -10,7 +10,7 @@ my $loop = IO::Async::Loop->new();
 
 $loop->add( Example::FortuneResponder->new( handle => \*STDIN ) );
 
-$loop->loop_forever();
+$loop->run;
 
 package Example::FortuneResponder;
 use base qw( Net::Async::FastCGI );
@@ -22,7 +22,7 @@ sub on_request
    my $self = shift;
    my ( $req ) = @_;
    
-   my $kid = $self->get_loop->open_child(
+   my $kid = $self->loop->open_child(
       command => [ $FORTUNE ],
       stdout => {
          on_read => sub {
